@@ -1,43 +1,3 @@
-// const express = require("express");
-// const router = new express.Router();
-// const nodemailer = require("nodemailer");
-
-
-// router.post("/register", (req, res) => {
-//    const { email } = req.body;
-
-//    try {
-//       const transporter = nodemailer.createTransport({
-//          service: "gmail",
-//          auth: {
-//             user: process.env.EMAIL,
-//             pass: process.env.PASSWORD
-
-//          }
-//       });
-
-//       const mailOption = {
-//          from: process.env.EMAIL,
-//          to: email,
-//          subject: "Sending Email With React",
-//          html: "<h1>CONGRAGULATION you Successfully Send Email</h1>"
-//       }
-
-//       transporter.sendMail(mailOption, (error, info) => {
-//          if (error) {
-//             console.log("Error", error)
-//          }
-//          else {
-//             console.log("Email sent" + info.response);
-//             res.status(201).json({ status: 201, info })
-//          }
-//       })
-//    } catch (error) {
-//       res.status(201).json({ status: 401, error })
-//    }
-// });
-
-// module.exports = router
 
 const express = require("express");
 const router = new express.Router();
@@ -120,6 +80,23 @@ function verifyOTP(email, enteredOTP) {
 
    return false;
 }
+
+router.post('/verify-otp', (req, res) => {
+   const { email, otp } = req.body;
+   console.log(email)
+   try {
+      const isOTPValid = verifyOTP(email,otp);
+      console.log(otp)
+      if (isOTPValid) {
+         res.status(200).json({ status: 201, message: 'OTP verified successfully' });
+      } else {
+         res.status(401).json({ status: 401, message: 'Invalid OTP' });
+      }
+   } catch (error) {
+      console.error(error);
+      res.status(500).json({ status: 500, error: 'Server error' });
+   }
+});
 
 module.exports = router;
 
