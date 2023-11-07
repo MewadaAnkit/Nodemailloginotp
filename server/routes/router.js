@@ -2,8 +2,8 @@ const express = require("express");
 const router = new express.Router();
 const nodemailer = require("nodemailer");
 const User = require('../Modal/Student')
-const uuid = require('uuid')
-const Course = require('../Modal/Courses')
+const Course = require('../Modal/NewCourse.js')
+
 const Eligibility = require('../Modal/Eligibility.js');
 const otpStorage = new Map();
 const jwt = require('jsonwebtoken')
@@ -110,6 +110,7 @@ function generateRandomNumberid(length) {
    return Math.floor(Math.pow(10, length - 1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1));
 }
 
+
  async function sendIdPass(randomId , randomPassword , email , name){
    const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -147,9 +148,14 @@ router.post('/register', (req, res) => {
          email,
          name ,
          dob,
+         fathersname,
+         mothersname,
+         mobile,
          randomId,
-         randomPassword
-       
+         randomPassword,
+         isApproved:false,
+         isEnrolled:false
+           
       });
    
       savedUser.save();
@@ -165,12 +171,24 @@ router.post('/login',async(req,res)=>{
       const { randomId, randomPassword } = req.body;
       try {
          const user = await User.findOne({ randomId: randomId , randomPassword:randomPassword });
+         const UserResponse = {
+            user:user._id , 
+            username:user.name ,
+            email:user.email ,
+            dob:user.dob ,
+            isApproved:user.isApproved,
+            isRegistered:user.isRegistered,
+            fathersName:user.fathersname,
+            mothersName:user.mothersname
+               
+
+         }
          if (user) {
            
              const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET , { expiresIn: '1h' });
              res.cookie("access-token", token, {
                httpOnly: true,
-            }).status(200).json({ message: 'Login successful', user:user._id , username:user.name , email:user.email , dob:user.dob});
+            }).status(200).json({ message: 'Login successful', UserResponse});
          } else {
              res.status(401).json({ message: 'Invalid login credentials' });
          }
@@ -182,9 +200,16 @@ router.post('/login',async(req,res)=>{
 
 //Register Updates
 router.put('/registerupdates',async(req,res)=>{
-     const {CourseName , CourseType ,CourseBranch} = req.body
+   const { courseName, courseType, courseBranch, eligibility,
+      domicile, gender, lastExamType, qualification, category, qualificationPercentage, nationality, passingYear, qualifyingEntranceExam, entranceBasedTypeExam } = req.body
      try{
-        const updatedStudent = await User.findByIdAndUpdate({$set:req.body},{new:true})
+      const data = {
+          courseName, courseType, courseBranch, eligibility,
+         mobile, domicile, gender, lastExamType, qualification, category, qualificationPercentage,isRegistered:true
+      }
+
+       const id = req.body.id
+        const updatedStudent = await User.findByIdAndUpdate(id ,{ $set: data },{new:true})
         res.status(200).json(updatedStudent)
      }catch(err){
        res.status(500).json('Something Went Wrong!')
@@ -206,6 +231,7 @@ router.post('/course',(req,res)=>{
     }
 
 })
+
 //Eligibility Routes
 router.post('/eligible',(req,res)=>{
    try{
@@ -219,6 +245,104 @@ router.post('/eligible',(req,res)=>{
       res.json(err)
    }
 
+})
+router.put('/api/update', async (req, res) => {
+   try {
+     const  studentId= req.body.studentId;
+     const updatedData = { 
+      ...req.body
+   };
+      
+     console.log(studentId , updatedData, " dfdkfjkdljf")
+     const student = await User.findByIdAndUpdate(studentId, 
+      { $set: { professional:updatedData}}, { new: true });
+ 
+     if (!student) {
+       return res.status(404).json({ error: 'Student not found' });
+     }
+ 
+     
+     const academicDetailsStatus = student.professional ? 'filled' : 'pending';
+     res.status(200).json({ message: 'Data updated successfully', data: student, academicDetailsStatus })
+
+   } catch (error) {
+     console.error('Error updating data:', error);
+     res.status(500).json({ error: 'Internal server error' });
+   }
+ });
+ router.put('/api/update/address', async (req, res) => {
+   try {
+     const studentId = req.body.studentId;
+     
+   
+     const updatedAddress = {
+      ...req.body
+     };
+
+     console.log(updatedAddress)
+ 
+     const student = await User.findByIdAndUpdate(
+       studentId,
+       { $set: { 'address.currentAddress': updatedAddress } },
+       { new: true }
+     );
+ 
+     if (!student) {
+       return res.status(404).json({ error: 'Student not found' });
+     }
+ 
+     const addressStatus = student.address ? 'filled' : 'pending';
+     res
+       .status(200)
+       .json({ message: 'Address updated successfully', data: student, addressStatus });
+   } catch (error) {
+     console.error('Error updating address data:', error);
+     res.status(500).json({ error: 'Internal server error' });
+   }
+ });
+ router.put('/api/update/address', async (req, res) => {
+   try {
+     const studentId = req.body.studentId;
+     
+   
+     const updatedAddress = {
+      ...req.body
+     };
+
+     console.log(updatedAddress)
+ 
+     const student = await User.findByIdAndUpdate(
+       studentId,
+       { $set: { 'address.currentAddress': updatedAddress } },
+       { new: true }
+     );
+ 
+     if (!student) {
+       return res.status(404).json({ error: 'Student not found' });
+     }
+ 
+     const addressStatus = student.address ? 'filled' : 'pending';
+     res
+       .status(200)
+       .json({ message: 'Address updated successfully', data: student, addressStatus });
+   } catch (error) {
+     console.error('Error updating address data:', error);
+     res.status(500).json({ error: 'Internal server error' });
+   }
+ });
+router.post('/eligibilityacc', async (req,res)=>{
+   const { CourseName , CourseType, CourseBranch } = req.body;
+
+   try {
+     const course = await Course.findOne({ CourseName, CourseType, CourseBranch });
+     if (course){
+       return res.json({ eligibility: course.Eligibility });
+     } else {
+       return res.json({ eligibility: 'Not found' });
+     }
+   } catch (error) {
+     return res.status(500).json({ error: 'Internal Server Error' });
+   }
 })
 
 

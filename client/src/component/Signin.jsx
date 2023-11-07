@@ -1,6 +1,4 @@
 import * as React from "react";
-import { useFormik } from "formik";
-import * as yup from "yup";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -15,15 +13,6 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
-
-const validationSchema = yup.object({
-  email: yup
-    .string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  Password: yup.string().required("Password is required"),
-});
-
 function Copyright(props) {
   return (
     <Typography
@@ -41,45 +30,50 @@ function Copyright(props) {
     </Typography>
   );
 }
-
 const defaultTheme = createTheme();
 
-export default function Login() {
+export default function Signin() {
   const navigate = useNavigate();
-  const formik = useFormik({
-    initialValues: {
-      email: "",
-      Password: "",
-    },
-    validationSchema: validationSchema,
-    onSubmit: async (values, event) => {
-      const data = new FormData(event.currentTarget);
-      //   console.log(values);
-      try {
-        const response = await fetch("http://localhost:7786/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        });
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const randomId = data.get("randomId");
+    const randomPassword = data.get("randomPassword");
 
-        if (response.ok) {
-          const data = await response.json(); // Parse the response body as JSON
-          const user = data.UserResponse;
-          console.log(user, "Jana to padega");
-          localStorage.setItem("AnkitHOD", JSON.stringify(user));
-          console.log("Login successful");
-          navigate("/dashboard");
-        } else {
-          console.error("Login failed");
+    try {
+      const response = await fetch("http://localhost:7786/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ randomId, randomPassword }),
+      });
+
+      if (response.ok) {
+        const data = await response.json(); // Parse the response body as JSON
+        const user = data.UserResponse;
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        console.log("Login successful" , user);
+
+        if(user.isApproved === true){
+           navigate('/enrollement')
         }
-      } catch (error) {
-        console.error("An error occurred:", error);
+        else{
+          if(user.isRegistered === true){
+            navigate("/waiting")
+          }else{
+            navigate("/selectCourse");
+          }
+        }
+      } else {
+        console.error("Login failed");
+        // Handle errors here, e.g., show an error message
       }
-    },
-    // console.log(values);
-  });
+    } catch (error) {
+      console.error("An error occurred:", error);
+      // Handle network errors or other issues here
+    }
+  };
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -92,7 +86,7 @@ export default function Login() {
           md={7}
           sx={{
             backgroundImage:
-              "url(https://www.mpnvva.in/Image/UniversityPicture?instituteID=12)",
+              "url(https://sssutms.co.in/cms/Areas/Website/Files/Gallery/1/img-24.JPG)",
             backgroundRepeat: "no-repeat",
             backgroundColor: (t) =>
               t.palette.mode === "light"
@@ -102,7 +96,7 @@ export default function Login() {
             backgroundPosition: "center",
           }}
         />
-        <Grid item xs={12} sm={5} md={5} component={Paper} elevation={6} square>
+        <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
           <Box
             sx={{
               my: 6,
@@ -116,44 +110,34 @@ export default function Login() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
-              ADMIN SIGN IN
+              Sign in
             </Typography>
-            <form onSubmit={formik.handleSubmit} noValidate>
+            <Box
+              component="form"
+              noValidate
+              onSubmit={handleSubmit}
+              sx={{ mt: 1 }}
+            >
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                id="email"
-                name="email"
-                label="Email Address"
-                autoComplete="off"
+                id="randomId"
+                label="Enter Id"
+                name="randomId"
+                autoComplete="randomId"
                 autoFocus
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                error={
-                  formik.touched.email && formik.errors.email ? true : false
-                }
-                helperText={formik.touched.email && formik.errors.email}
               />
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                name="Password"
-                label="Password"
+                name="randomPassword"
+                label="Enter Password"
                 type="password"
-                id="Password"
-                autoComplete="off"
-                value={formik.values.Password}
-                onChange={formik.handleChange}
-                error={
-                  formik.touched.Password && formik.errors.Password
-                    ? true
-                    : false
-                }
-                helperText={formik.touched.Password && formik.errors.Password}
+                id="randomPassword"
+                autoComplete="randomPassword"
               />
-
               <Button
                 type="submit"
                 fullWidth
@@ -162,19 +146,19 @@ export default function Login() {
               >
                 Sign In
               </Button>
-
               <Grid container>
                 <Grid item xs>
-                  <Link>Forgot password?</Link>
+                  <Link href="#" variant="body2">
+                    Forgot password?
+                  </Link>
                 </Grid>
                 <Grid item>
                   <p>
-                    Dont't have an account{" "}
-                    <Link to="/adminregister">Sign Up</Link>
+                    Dont't have an account <Link to="/studentregister">Sign Up</Link>
                   </p>
                 </Grid>
               </Grid>
-            </form>
+            </Box>
           </Box>
         </Grid>
       </Grid>
