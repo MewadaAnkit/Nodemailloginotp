@@ -36,12 +36,53 @@ const ProfessionalDetailsSchema = new mongoose.Schema({
 
 
 const AcademicDetailsSchema = new mongoose.Schema({
-  // Define your academic details fields here
-  // For example:
-  degree: String,
-  university: String,
-  // Add more fields as needed
+  tenthSchool: String,
+  tenthPassingYear: String,
+  tenthRollNo: String,
+  tenthBoard: String,
+  tenthExamType: String,
+  tenthMarksObtain: String,
+  tenthMaxMarks: String,
+  tenthPercentage: String,
+  twelfthSchool: String,
+  twelfthPassingYear: String,
+  twelfthRollNo: String,
+  twelfthBoard: String,
+  twelfthExamType: String,
+  twelfthMarksObtain: String,
+  twelfthMaxMarks: String,
+  twelfthPercentage: String,
+  graduationSchool: String,
+  graduationPassingYear: String,
+  graduationRollNo: String,
+  graduationBoard: String,
+  graduationExamType: String,
+  graduationMarksObtain: String,
+  graduationMaxMarks: String,
+  graduationPercentage: String,
+  postGraduationSchool: String,
+  postGraduationPassingYear: String,
+  postGraduationRollNo: String,
+  postGraduationBoard: String,
+  postGraduationExamType: String,
+  postGraduationMarksObtain: String,
+  postGraduationMaxMarks: String,
+  postGraduationPercentage: String,
+  otherSchool: String,
+  otherPassingYear: String,
+  otherRollNo: String,
+  otherBoard: String,
+  otherExamType: String,
+  otherMarksObtain: String,
+  otherMaxMarks: String,
+  otherPercentage: String,
 });
+const PhotoSignSchema = new mongoose.Schema({
+        photo:String,
+        signature:String
+});
+
+
 const StudentSchema = new mongoose.Schema({
   name:{
     type:String,
@@ -122,7 +163,8 @@ entranceBasedTypeanceExam:{
   isRegistered:{
     type:Boolean,
     default:false
-  }
+  },
+  PhotoSign:PhotoSignSchema
 
 
     

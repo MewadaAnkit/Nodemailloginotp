@@ -75,6 +75,29 @@ router.get('/api/NewRegistrationRequests' , async(req,res)=>{
 })
 
 
+router.get('/api/enrollement' , async(req,res)=>{
+  
+  const { Branch } = req.body;
+
+  try {
+   
+      const branchRegex = new RegExp(Branch.split(/\s+/).map(term => `(?=.*${term})`).join(''), 'i');
+    console.log(branchRegex)
+    const students = await User.find({
+      courseBranch: branchRegex,
+   
+    });
+    const approvedStudents = students.filter(student => student.isEnrolled === false   && student.isApproved === true);
+ // console.log(approvedStudents)
+    res.status(200).json({ students:approvedStudents });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+})
+
+
+
 //Put Request 
 
 router.put('/api/approve', async(req, res) => {

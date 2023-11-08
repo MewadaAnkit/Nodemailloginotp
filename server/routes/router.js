@@ -49,7 +49,7 @@ router.post('/send-otp', async (req, res) => {
 });
 
 function generateOTP() {
-   // Generate a random 6-digit OTP
+
    return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
@@ -186,9 +186,14 @@ router.post('/login',async(req,res)=>{
          if (user) {
            
              const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET , { expiresIn: '1h' });
-             res.cookie("access-token", token, {
+             const option = {
+               expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+               secure: true,
                httpOnly: true,
-            }).status(200).json({ message: 'Login successful', UserResponse});
+               sameSite: "none",
+               //path: "/",
+             };
+             res.cookie("access-token", token, option).status(200).json({ message: 'Login successful', UserResponse});
          } else {
              res.status(401).json({ message: 'Invalid login credentials' });
          }
@@ -218,34 +223,37 @@ router.put('/registerupdates',async(req,res)=>{
 })
 
 //Course Routes
-router.post('/course',(req,res)=>{
-    try{
-       const savedCourse = new Course({
-         ...req.body
-       })
-       savedCourse.save();
-       res.status(200).json('courses saved successfully')
+// router.post('/course',(req,res)=>{
+//     try{
+//        const savedCourse = new Course({
+//          ...req.body
+//        })
+//        savedCourse.save();
+//        res.status(200).json('courses saved successfully')
 
-    }catch(err){
-       res.json(err)
-    }
+//     }catch(err){
+//        res.json(err)
+//     }
 
-})
+// })
 
 //Eligibility Routes
-router.post('/eligible',(req,res)=>{
-   try{
-      const savedEligibility = new Eligibility({
-        ...req.body
-      })
-      savedEligibility.save();
-      res.status(200).json('Eligibility saved successfully')
+// router.post('/eligible',(req,res)=>{
+//    try{
+//       const savedEligibility = new Eligibility({
+//         ...req.body
+//       })
+//       savedEligibility.save();
+//       res.status(200).json('Eligibility saved successfully')
 
-   }catch(err){
-      res.json(err)
-   }
+//    }catch(err){
+//       res.json(err)
+//    }
 
-})
+// })
+
+
+
 router.put('/api/update', async (req, res) => {
    try {
      const  studentId= req.body.studentId;
@@ -270,6 +278,8 @@ router.put('/api/update', async (req, res) => {
      res.status(500).json({ error: 'Internal server error' });
    }
  });
+
+
  router.put('/api/update/address', async (req, res) => {
    try {
      const studentId = req.body.studentId;
@@ -300,16 +310,12 @@ router.put('/api/update', async (req, res) => {
      res.status(500).json({ error: 'Internal server error' });
    }
  });
+ 
+
  router.put('/api/update/address', async (req, res) => {
    try {
      const studentId = req.body.studentId;
-     
-   
-     const updatedAddress = {
-      ...req.body
-     };
-
-     console.log(updatedAddress)
+     const updatedAddress = { ...req.body };
  
      const student = await User.findByIdAndUpdate(
        studentId,
@@ -321,7 +327,12 @@ router.put('/api/update', async (req, res) => {
        return res.status(404).json({ error: 'Student not found' });
      }
  
-     const addressStatus = student.address ? 'filled' : 'pending';
+     // Check if all required fields are present
+     const requiredFields = ['address1', 'address2', 'country', 'state', 'district', 'pinCode'];
+     const isComplete = requiredFields.every(field => student[field]);
+ 
+     const addressStatus = isComplete ? 'complete' : 'pending';
+ 
      res
        .status(200)
        .json({ message: 'Address updated successfully', data: student, addressStatus });
@@ -329,7 +340,80 @@ router.put('/api/update', async (req, res) => {
      console.error('Error updating address data:', error);
      res.status(500).json({ error: 'Internal server error' });
    }
+}) 
+
+
+
+
+
+ router.put('/api/update/academic', async (req, res) => {
+   try {
+      const { studentId, academicDetails } = req.body;
+      
+      const updatedAcademic = {
+        ...academicDetails
+      };
+      console.log(academicDetails)
+  
+      const student = await User.findByIdAndUpdate(
+        studentId,
+        { $set: { academicDetails: updatedAcademic } },
+        { new: true }
+      );
+      if (!student) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+  
+      const addressStatus = student.address ? 'filled' : 'pending';
+      res.status(200).json({ message: 'Academic details updated successfully', data: student, addressStatus });
+    } catch (error) {
+      console.error('Error updating academic details:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
  });
+
+ router.put('/api/upload/photosign', async (req, res) => {
+   try {
+      const { studentId,  } = req.body;
+       const signature = {
+         photo : req.body.photo,
+         signature:req.body.signature
+       }
+    
+    console.log(signature)
+  
+      const student = await User.findByIdAndUpdate(
+        studentId,
+        { $set: { PhotSign: signature } },
+        { new: true }
+      );
+      if (!student) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+  
+      const photoStatus = student.PhotoSign ? 'filled' : 'pending';
+      res.status(200).json({ message: 'Details updated successfully', data: student, photoStatus });
+    } catch (error) {
+      console.error('Error updating academic details:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+ });
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 router.post('/eligibilityacc', async (req,res)=>{
    const { CourseName , CourseType, CourseBranch } = req.body;
 

@@ -157,7 +157,7 @@ const Professional = () => {
                 <Form.Select
                   aria-label="Default select example"
                   name="Medium"
-                  value={values.Medium}
+                  value={ values.Medium}
                   onChange={handleChange}
                   onBlur={handleBlur}
                 >
